@@ -28,20 +28,22 @@ if !exists('g:ast_mkfile')
 endif
 
 
+let s:is_bufread = 0
 let s:flg_settags = 0
 let s:dir = ''
 
 augroup autosettags#AST
     autocmd!
-    autocmd BufRead * call autosettags#ASTOnBufRead()
+    autocmd BufReadPost * call autosettags#ASTOnBufRead()
 augroup END
 
-command! AST call autosettags#ASTSetTags(0)
-command! ASTMakeTags call autosettags#ASTMakeTags()
+command! AST call autosettags#ASTSetTagsPre()
+command! ASTMakeTags call autosettags#ASTMakeTagsPre()
 
 function! autosettags#ASTOnBufRead()
   if 1 == g:ast_autoset && 0 == s:flg_settags
-    call autosettags#ASTSetTags(1)
+    let s:is_bufread = 1
+    call autosettags#ASTSetTags()
   endif
 endfunction
 
@@ -75,11 +77,16 @@ function! s:get_filedir(dir, fname)
 
 endfunction
 
-function! autosettags#ASTSetTags(is_onbufread)
+function! autosettags#ASTSetTagsPre()
+  let s:is_bufread = 0
+  call autosettags#ASTSetTags()
+endfunction
 
-  let l:filedir = s:get_filedir(fnamemodify('%', ':p:h'), g:ast_tagsfile)
+function! autosettags#ASTSetTags()
+
+  let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_tagsfile)
   if '' == l:filedir
-    let l:conf = confirm('note: not found ['.g:ast_tagsfile.']')
+    call s:confirm('note: not found ['.g:ast_tagsfile.']')
     let l:filedir = autosettags#ASTMakeTags()
     if '' == l:filedir
       return
@@ -91,25 +98,28 @@ function! autosettags#ASTSetTags(is_onbufread)
   if filereadable(l:tagsfile_path)
     execute 'set tags=' . l:tagsfile_path
     let s:flg_settags = 1
-    if 1 != a:is_onbufread
-      let l:conf = confirm('message: set tags=' . l:tagsfile_path)
-    endif
+    call s:confirm('message: set tags='.l:tagsfile_path)
   else
-    if 1 != a:is_onbufread
-      let l:conf = confirm('error: could not read ['.g:ast_tagsfile.']')
-    endif
+    call s:confirm('error: could not read ['.g:ast_tagsfile.']')
   endif
 
 endfunction
 
+function! autosettags#ASTMakeTagsPre()
+  let s:is_bufread = 0
+  call autosettags#ASTMakeTags()
+endfunction
 
 function! autosettags#ASTMakeTags()
 
-  let s:dir = ''
-  let l:filedir = s:get_filedir(fnamemodify('%', ':p:h'), g:ast_mkfile)
+  if 1 == s:is_bufread
+    return ''
+  endif
 
+  let s:dir = ''
+  let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_mkfile)
   if '' == l:filedir
-    let l:conf = confirm('note: not found ['.g:ast_mkfile.']')
+    call s:confirm('note: not found ['.g:ast_mkfile.']')
     return ''
   endif
 
@@ -132,13 +142,19 @@ function! autosettags#ASTMakeTags()
   silent execute l:execute
 
   if !filereadable(l:ast_tagsfile)
-    let l:conf = confirm('error: could not create ['.l:ast_tagsfile.']')
+    call s:confirm('error: could not create ['.l:ast_tagsfile.']')
     return ''
   endif
 
-  let l:conf = confirm('info: created ['.l:ast_tagsfile.']')
+  call s:confirm('info: created ['.l:ast_tagsfile.']')
   return l:filedir
 
+endfunction
+
+function s:confirm(msg)
+  if 1 != s:is_bufread
+    let conf = confirm(a:msg)
+  endif
 endfunction
 
 let &cpo = s:save_cpo
