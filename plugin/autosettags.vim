@@ -20,7 +20,7 @@ if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
 if !exists('g:ast_mkfile')
-  if has('win32')
+  if has("win32") || has("win95") || has("win64") || has("win16")
     let g:ast_mkfile = 'make_tags.bat'
   else
     let g:ast_mkfile = 'make_tags.sh'
@@ -52,7 +52,7 @@ function! s:get_filedir(dir, fname)
   let l:ast_tagsfile = fnamemodify(a:dir.'/'.a:fname, ':p')
 
   if filereadable(l:ast_tagsfile)
-    if has('win32')
+    if has("win32") || has("win95") || has("win64") || has("win16")
       return a:dir.'\'
     else
       return a:dir.'/'
@@ -126,7 +126,7 @@ function! autosettags#ASTMakeTags()
   let l:ast_tagsfile = fnamemodify(l:filedir.g:ast_tagsfile, ':p')
   let l:mkfile_path = fnamemodify(l:filedir.g:ast_mkfile, ':p')
 
-  if has('win32')
+  if has("win32") || has("win95") || has("win64") || has("win16")
     let l:drive = l:filedir[:stridx(l:filedir, ':')]
     let l:execute = '!'.l:drive.' & cd '.shellescape(l:filedir).' & '.shellescape(l:mkfile_path)
   else
