@@ -19,6 +19,14 @@ endif
 if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
+if !exists('g:ast_mkfile')
+  if has('win32')
+    let g:ast_mkfile = 'make_tags.bat'
+  else
+    let g:ast_mkfile = 'make_tags.sh'
+  endif
+endif
+
 
 let s:flg_settags = 0
 let s:dir = ''
@@ -29,6 +37,7 @@ augroup autosettags#AST
 augroup END
 
 command! AST call autosettags#ASTSetTags()
+command! ASTMakeTags call autosettags#ASTMakeTags()
 
 function! autosettags#ASTOnBufRead()
   if 1 == g:ast_autoset && 0 == s:flg_settags
@@ -42,10 +51,8 @@ endfunction
 
 function! s:search_tagsfile(dir)
   let l:tagsfile_path = fnamemodify(a:dir.'/'.g:ast_tagsfile, ':p')
-  " echo l:tagsfile_path
   if filereadable(l:tagsfile_path)
     execute 'set tags=' . l:tagsfile_path
-    " echo 'set tags=' . l:tagsfile_path
     let s:flg_settags = 1
     return
   endif
@@ -62,6 +69,8 @@ function! s:search_tagsfile(dir)
   return s:search_tagsfile(l:dir)
 endfunction
 
+function! autosettags#ASTMakeTags()
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
