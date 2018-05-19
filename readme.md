@@ -1,6 +1,6 @@
 # vim-autosettags
 
-When opening a file, autosettags plugins look for a file named .tags(g:ast_tagsfile) & make_tags(g:ast_mkfile) in the directory of the opened file and in every parent directory.
+When opening a file, autosettags plugins look for a file named .tags(g:ast_tagsfile) & .tags(g:ast_mkfile) in the directory of the opened file and in every parent directory.
 
 ```
 /dir/subdir/.tags
@@ -25,8 +25,8 @@ When opening a file, autosettags plugins look for a file named .tags(g:ast_tagsf
 ```vim
 let g:ast_tagsfile = '.tags' "default
 let g:ast_autoset = 1 "default
-let g:ast_mkfile = 'make_tags.bat' "default windows
-let g:ast_mkfile = 'make_tags.sh' "default linux
+let g:ast_mkfile = '.tags.bat' "default windows
+let g:ast_mkfile = '.tags.sh' "default linux
 ```
 
 ### Make .tags

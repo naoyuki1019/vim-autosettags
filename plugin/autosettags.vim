@@ -21,9 +21,9 @@ if !exists('g:ast_tagsfile')
 endif
 if !exists('g:ast_mkfile')
   if has("win32") || has("win95") || has("win64") || has("win16")
-    let g:ast_mkfile = 'make_tags.bat'
+    let g:ast_mkfile = '.tags.bat'
   else
-    let g:ast_mkfile = 'make_tags.sh'
+    let g:ast_mkfile = '.tags.sh'
   endif
 endif
 
