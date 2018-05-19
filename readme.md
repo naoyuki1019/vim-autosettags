@@ -32,5 +32,5 @@ let g:ast_mkfile = 'make_tags.sh' "default linux
 ### Make .tags
 
 ```shell
-\ctags -R --exclude=.git --exclude=node_modules --languages=PHP --langmap=PHP:.php --php-kinds=c+f+d -f .tags .
+\ctags -R --exclude=.git --exclude=logs --languages=PHP --langmap=PHP:+.inc --php-kinds=-j -f .tags .
 ```

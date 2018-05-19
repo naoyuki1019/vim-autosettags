@@ -1,2 +1,2 @@
-\ctags -R --exclude=.git --exclude=node_modules --languages=PHP --langmap=PHP:.inc --php-kinds=c+f+d -f .tags .
+\ctags -R --exclude=.git --exclude=logs --languages=PHP --langmap=PHP:+.inc --php-kinds=-j -f .tags .
 
