@@ -1,3 +1,4 @@
+scriptencoding utf-8
 "/**
 " * @file autosettags.vim
 " * @author naoyuki onishi <naoyuki1019 at gmail.com>
@@ -13,6 +14,14 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 
+if has("win32") || has("win95") || has("win64") || has("win16")
+  let s:is_win = 1
+  let s:ds = '\'
+else
+  let s:is_win = 0
+  let s:ds = '/'
+endif
+
 if !exists('g:ast_autoset')
   let g:ast_autoset = 1
 endif
@@ -23,17 +32,11 @@ if !exists('g:ast_append')
   let g:ast_append = 1
 endif
 if !exists('g:ast_mkfile')
-  if has("win32") || has("win95") || has("win64") || has("win16")
+  if 1 == s:is_win
     let g:ast_mkfile = '.tags.bat'
   else
     let g:ast_mkfile = '.tags.sh'
   endif
-endif
-
-if has("win32") || has("win95") || has("win64") || has("win16")
-  let s:ds = '\'
-else
-  let s:ds = '/'
 endif
 
 let s:is_bufread = 0
@@ -44,57 +47,103 @@ augroup autosettags#AST
     autocmd BufReadPost * call autosettags#ASTOnBufRead()
 augroup END
 
-command! AST call autosettags#ASTSetTagsPre()
-command! ASTMakeTags call autosettags#ASTMakeTagsPre()
+command! AST call autosettags#ASTSetTags()
+command! ASTMakeTags call autosettags#ASTMakeTags()
 
 function! autosettags#ASTOnBufRead()
   if 1 == g:ast_autoset && 0 == s:flg_settags
     let s:is_bufread = 1
     call autosettags#ASTSetTags()
+    let s:is_bufread = 0
   endif
 endfunction
 
-function! s:get_filedir(dir, fname)
+function! s:search_tagsfile(dir)
+  let l:dir = a:dir
 
-  let l:ast_tagsfile = fnamemodify(a:dir.s:ds.a:fname, ':p')
-
-  if filereadable(l:ast_tagsfile)
-    return a:dir.s:ds
+  if 1 == s:is_win
+    if 3 == strlen(l:dir)
+      let l:dir = l:dir[0:3-2]
+    endif
+  else
   endif
 
-  let l:dir = fnamemodify(a:dir.s:ds.'..'.s:ds, ':p:h')
-
-  if 3 == strlen(l:dir)
-    " echo 'windows root '
-    return ''
+  let l:tagsfile_path = fnamemodify(l:dir.s:ds.g:ast_tagsfile, ':p')
+  if filereadable(l:tagsfile_path)
+    return l:dir.s:ds.g:ast_tagsfile
   endif
 
-  if '/' == l:dir
-    " echo 'root directory / '
-    return ''
+  let l:mkfile_path = fnamemodify(l:dir.s:ds.g:ast_mkfile, ':p')
+  if filereadable(l:mkfile_path)
+    let s:find_mkfile = 1
+    let l:res = s:exec_make(l:dir.s:ds)
+    if 0 == l:res
+      return l:dir.s:ds.g:ast_tagsfile
+    endif
   endif
 
-  return s:get_filedir(l:dir, a:fname)
+  if 1 == s:is_win
+    if 2 == strlen(l:dir)
+      return ''
+    endif
+  else
+    if '/' == l:dir
+      return ''
+    endif
+  endif
+
+  let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
+  return s:search_tagsfile(l:dir)
 
 endfunction
 
-function! autosettags#ASTSetTagsPre()
-  let s:is_bufread = 0
-  call autosettags#ASTSetTags()
+
+function! s:search_mkfile(dir)
+  let l:dir = a:dir
+
+  if 1 == s:is_win
+    if 3 == strlen(l:dir)
+      let l:dir = l:dir[0:3-2]
+    endif
+  else
+  endif
+
+  let l:mkfile_path = fnamemodify(l:dir.s:ds.g:ast_mkfile, ':p')
+  if filereadable(l:mkfile_path)
+    let s:find_mkfile = 1
+    let l:res = s:exec_make(l:dir.s:ds)
+    if 0 == l:res
+      return l:dir.s:ds.g:ast_mkfile
+    endif
+  endif
+
+  if 1 == s:is_win
+    if 2 == strlen(l:dir)
+      return ''
+    endif
+  else
+    if '/' == l:dir
+      return ''
+    endif
+  endif
+
+  let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
+  return s:search_mkfile(l:dir)
+
 endfunction
 
 function! autosettags#ASTSetTags()
 
-  let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_tagsfile)
-  if '' == l:filedir
-    call s:confirm('note: not found ['.g:ast_tagsfile.']')
-    let l:filedir = autosettags#ASTMakeTags()
-    if '' == l:filedir
-      return
+  let s:find_mkfile = 0
+  let l:tagsfile_path = s:search_tagsfile(expand('%:p:h'))
+  if '' == l:tagsfile_path
+    if 0 == s:find_mkfile
+      call s:confirm('note: not found ['.g:ast_tagsfile.'] & ['.g:ast_mkfile.']')
+    else
+      call s:confirm('note: search end')
     endif
+    return
   endif
-
-  let l:tagsfile_path = fnamemodify(l:filedir.g:ast_tagsfile, ':p')
 
   if !filereadable(l:tagsfile_path)
     call s:confirm('error: could not read ['.l:tagsfile_path.']')
@@ -115,48 +164,47 @@ function! autosettags#ASTSetTags()
 
 endfunction
 
-function! autosettags#ASTMakeTagsPre()
-  let s:is_bufread = 0
-  call autosettags#ASTMakeTags()
-endfunction
-
 function! autosettags#ASTMakeTags()
 
-  if 1 == s:is_bufread
-    return ''
+  let s:find_mkfile = 0
+  let l:mkfile_path = s:search_mkfile(expand('%:p:h'))
+  if '' == l:mkfile_path
+    if 0 == s:find_mkfile
+      call confirm('note: not found ['.g:ast_mkfile.']')
+    else
+      call confirm('note: search end')
+    endif
   endif
 
-  let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_mkfile)
-  if '' == l:filedir
-    call s:confirm('note: not found ['.g:ast_mkfile.']')
-    return ''
-  endif
+endfunction
 
-  let l:ast_tagsfile = fnamemodify(l:filedir.g:ast_tagsfile, ':p')
-  let l:mkfile_path = fnamemodify(l:filedir.g:ast_mkfile, ':p')
+function s:exec_make(dir)
 
-  if has("win32") || has("win95") || has("win64") || has("win16")
-    let l:drive = l:filedir[:stridx(l:filedir, ':')]
-    let l:execute = '!'.l:drive.' & cd '.shellescape(l:filedir).' & '.shellescape(l:mkfile_path)
+  let l:tagsfile_path = fnamemodify(a:dir.g:ast_tagsfile, ':p')
+  let l:mkfile_path = fnamemodify(a:dir.g:ast_mkfile, ':p')
+
+  if 1 == s:is_win
+    let l:drive = a:dir[:stridx(a:dir, ':')]
+    let l:execute = '!'.l:drive.' & cd '.shellescape(a:dir).' & '.shellescape(l:mkfile_path)
   else
-    let l:execute = '!cd '.shellescape(l:filedir).'; '.shellescape(l:mkfile_path)
+    let l:execute = '!cd '.shellescape(a:dir).'; '.shellescape(l:mkfile_path)
   endif
 
   let l:conf = confirm('execute? ['.l:execute.']', "Yyes\nNno")
   if 1 != l:conf
-    return ''
+    return 2
   endif
 
-  call delete(l:ast_tagsfile)
+  call delete(l:tagsfile_path)
   silent execute l:execute
 
-  if !filereadable(l:ast_tagsfile)
-    call s:confirm('error: could not create ['.l:ast_tagsfile.']')
-    return ''
+  if !filereadable(l:tagsfile_path)
+    call confirm('error: could not create ['.l:tagsfile_path.']')
+    return 1
   endif
 
-  call s:confirm('info: created ['.l:ast_tagsfile.']')
-  return l:filedir
+  call confirm('info: created ['.l:tagsfile_path.']')
+  return 0
 
 endfunction
 
