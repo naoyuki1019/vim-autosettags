@@ -150,7 +150,7 @@ function! autosettags#ASTSetTags()
   endif
 
   if !filereadable(l:tagsfile_path)
-    call s:confirm('error: could not read ['.l:tagsfile_path.']')
+    call confirm('error: could not read ['.l:tagsfile_path.']')
     return
   endif
 
@@ -176,7 +176,7 @@ function! autosettags#ASTMakeTags()
     if 0 == s:find_mkfile
       call confirm('note: not found ['.g:ast_mkfile.']')
     else
-      call confirm('note: search end')
+      call confirm('info: end')
     endif
     return
   endif
