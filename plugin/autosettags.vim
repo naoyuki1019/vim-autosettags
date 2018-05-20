@@ -32,6 +32,10 @@ endif
 if !exists('g:ast_append')
   let g:ast_append = 1
 endif
+if !exists('g:ast_setmsg')
+  let g:ast_setmsg = 1
+endif
+
 
 "mkfile ***.sh ***.bat
 if !exists('g:ast_mkfile')
@@ -164,7 +168,9 @@ function! autosettags#ASTSetTags()
   execute  l:cmd
   let s:flg_settags = 1
 
-  echo l:cmd
+  if 1 == g:ast_setmsg
+    echo l:cmd
+  endif
 
 endfunction
 
@@ -221,3 +227,4 @@ endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
+
