@@ -19,6 +19,9 @@ endif
 if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
+if !exists('g:ast_append')
+  let g:ast_append = 1
+endif
 if !exists('g:ast_mkfile')
   if has("win32") || has("win95") || has("win64") || has("win16")
     let g:ast_mkfile = '.tags.bat'
@@ -27,6 +30,11 @@ if !exists('g:ast_mkfile')
   endif
 endif
 
+if has("win32") || has("win95") || has("win64") || has("win16")
+  let s:ds = '\'
+else
+  let s:ds = '/'
+endif
 
 let s:is_bufread = 0
 let s:flg_settags = 0
@@ -49,17 +57,13 @@ endfunction
 
 function! s:get_filedir(dir, fname)
 
-  let l:ast_tagsfile = fnamemodify(a:dir.'/'.a:fname, ':p')
+  let l:ast_tagsfile = fnamemodify(a:dir.s:ds.a:fname, ':p')
 
   if filereadable(l:ast_tagsfile)
-    if has("win32") || has("win95") || has("win64") || has("win16")
-      return a:dir.'\'
-    else
-      return a:dir.'/'
-    endif
+    return a:dir.s:ds
   endif
 
-  let l:dir = fnamemodify(a:dir.'/../', ':p:h')
+  let l:dir = fnamemodify(a:dir.s:ds.'..'.s:ds, ':p:h')
 
   if s:dir == l:dir
     " echo 'windows root ' . s:dir
@@ -84,6 +88,7 @@ endfunction
 
 function! autosettags#ASTSetTags()
 
+  let s:dir = ''
   let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_tagsfile)
   if '' == l:filedir
     call s:confirm('note: not found ['.g:ast_tagsfile.']')
@@ -95,13 +100,22 @@ function! autosettags#ASTSetTags()
 
   let l:tagsfile_path = fnamemodify(l:filedir.g:ast_tagsfile, ':p')
 
-  if filereadable(l:tagsfile_path)
-    execute 'set tags=' . l:tagsfile_path
-    let s:flg_settags = 1
-    call s:confirm('message: set tags='.l:tagsfile_path)
-  else
-    call s:confirm('error: could not read ['.g:ast_tagsfile.']')
+  if !filereadable(l:tagsfile_path)
+    call s:confirm('error: could not read ['.l:tagsfile_path.']')
+    return
   endif
+
+  let l:cmd = 'set tags'
+  if 1 == g:ast_append
+    let l:cmd .= '+='
+  else
+    let l:cmd .= '='
+  endif
+  let l:cmd .= l:tagsfile_path
+  execute  l:cmd
+  let s:flg_settags = 1
+
+  echo l:cmd
 
 endfunction
 
@@ -153,7 +167,7 @@ endfunction
 
 function s:confirm(msg)
   if 1 != s:is_bufread
-    let conf = confirm(a:msg)
+    call confirm(a:msg)
   endif
 endfunction
 
