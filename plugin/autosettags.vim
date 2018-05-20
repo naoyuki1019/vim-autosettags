@@ -38,7 +38,6 @@ endif
 
 let s:is_bufread = 0
 let s:flg_settags = 0
-let s:dir = ''
 
 augroup autosettags#AST
     autocmd!
@@ -65,8 +64,8 @@ function! s:get_filedir(dir, fname)
 
   let l:dir = fnamemodify(a:dir.s:ds.'..'.s:ds, ':p:h')
 
-  if s:dir == l:dir
-    " echo 'windows root ' . s:dir
+  if 3 == strlen(l:dir)
+    " echo 'windows root '
     return ''
   endif
 
@@ -74,8 +73,6 @@ function! s:get_filedir(dir, fname)
     " echo 'root directory / '
     return ''
   endif
-
-  let s:dir = l:dir
 
   return s:get_filedir(l:dir, a:fname)
 
@@ -88,7 +85,6 @@ endfunction
 
 function! autosettags#ASTSetTags()
 
-  let s:dir = ''
   let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_tagsfile)
   if '' == l:filedir
     call s:confirm('note: not found ['.g:ast_tagsfile.']')
@@ -130,7 +126,6 @@ function! autosettags#ASTMakeTags()
     return ''
   endif
 
-  let s:dir = ''
   let l:filedir = s:get_filedir(expand('%:p:h'), g:ast_mkfile)
   if '' == l:filedir
     call s:confirm('note: not found ['.g:ast_mkfile.']')
