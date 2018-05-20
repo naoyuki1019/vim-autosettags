@@ -165,7 +165,9 @@ function! autosettags#ASTSetTags()
     let l:cmd .= '='
   endif
   let l:cmd .= l:tagsfile_path
-  execute  l:cmd
+
+  silent execute  l:cmd
+
   let s:flg_settags = 1
 
   if 1 == g:ast_setmsg
