@@ -28,9 +28,12 @@ endif
 if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
+" [:set tags +=] or [:set tags =]
 if !exists('g:ast_append')
   let g:ast_append = 1
 endif
+
+"mkfile ***.sh ***.bat
 if !exists('g:ast_mkfile')
   if 1 == s:is_win
     let g:ast_mkfile = '.tags.bat'
@@ -39,6 +42,7 @@ if !exists('g:ast_mkfile')
   endif
 endif
 
+let s:find_mkfile = 0
 let s:is_bufread = 0
 let s:flg_settags = 0
 
@@ -63,7 +67,7 @@ function! s:search_tagsfile(dir)
 
   if 1 == s:is_win
     if 3 == strlen(l:dir)
-      let l:dir = l:dir[0:3-2]
+      let l:dir = l:dir[0:1]
     endif
   else
   endif
@@ -103,7 +107,7 @@ function! s:search_mkfile(dir)
 
   if 1 == s:is_win
     if 3 == strlen(l:dir)
-      let l:dir = l:dir[0:3-2]
+      let l:dir = l:dir[0:1]
     endif
   else
   endif
@@ -174,11 +178,12 @@ function! autosettags#ASTMakeTags()
     else
       call confirm('note: search end')
     endif
+    return
   endif
 
 endfunction
 
-function s:exec_make(dir)
+function! s:exec_make(dir)
 
   let l:tagsfile_path = fnamemodify(a:dir.g:ast_tagsfile, ':p')
   let l:mkfile_path = fnamemodify(a:dir.g:ast_mkfile, ':p')
@@ -208,7 +213,7 @@ function s:exec_make(dir)
 
 endfunction
 
-function s:confirm(msg)
+function! s:confirm(msg)
   if 1 != s:is_bufread
     call confirm(a:msg)
   endif
