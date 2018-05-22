@@ -25,6 +25,9 @@ endif
 if !exists('g:ast_autoset')
   let g:ast_autoset = 1
 endif
+if !exists('g:ast_autoset_onetime')
+  let g:ast_autoset_onetime = 1
+endif
 if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
@@ -59,7 +62,7 @@ command! AST call autosettags#ASTSetTags()
 command! ASTMakeTags call autosettags#ASTMakeTags()
 
 function! autosettags#ASTOnBufRead()
-  if 1 == g:ast_autoset && 0 == s:flg_settags
+  if 1 == g:ast_autoset && (0 == g:ast_autoset_onetime || (1 == g:ast_autoset_onetime && 0 == s:flg_settags))
     let s:is_bufread = 1
     call autosettags#ASTSetTags()
     let s:is_bufread = 0

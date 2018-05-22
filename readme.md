@@ -25,6 +25,7 @@ When opening a file, autosettags plugins look for a file named .tags(g:ast_tagsf
 ```vim
 let g:ast_tagsfile = '.tags' "default
 let g:ast_autoset = 1 "default
+let g:ast_autoset_onetime = 1 "default
 let g:ast_append = 1 "default [set tags+=]
 let g:ast_setmsg = 1 "default show message(:set tags=xxxx)
 let g:ast_mkfile = '.tags.bat' "default windows
