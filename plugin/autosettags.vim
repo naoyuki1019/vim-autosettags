@@ -53,6 +53,8 @@ let s:find_mkfile = 0
 let s:is_bufread = 0
 let s:flg_settags = 0
 
+let s:debug = 0
+
 augroup autosettags#AST
     autocmd!
     autocmd BufReadPost * call autosettags#ASTOnBufRead()
@@ -70,6 +72,14 @@ function! autosettags#ASTOnBufRead()
 endfunction
 
 function! s:search_tagsfile(dir)
+
+  " if 1 == s:debug
+  "   let outputfile = "~/autosettags_search_tagsfile.log"
+  "   execute ":redir! >> " . outputfile
+  "       silent! echon a:dir . "\n"
+  "   redir END
+  " endif
+
   let l:dir = a:dir
 
   if 1 == s:is_win
@@ -104,6 +114,17 @@ function! s:search_tagsfile(dir)
   endif
 
   let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
+
+  " 念のため
+  if 1 == s:is_win
+    let l:match = matchstr(l:dir, '\V..\\..\\')
+  else
+    let l:match = matchstr(l:dir, '\V../../')
+  endif
+  if '' != l:match
+    return ''
+  endif
+
   return s:search_tagsfile(l:dir)
 
 endfunction
@@ -139,14 +160,31 @@ function! s:search_mkfile(dir)
   endif
 
   let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
+
+  " 念のため
+  if 1 == s:is_win
+    let l:match = matchstr(l:dir, '\V..\\..\\')
+  else
+    let l:match = matchstr(l:dir, '\V../../')
+  endif
+  if '' != l:match
+    return ''
+  endif
+
   return s:search_mkfile(l:dir)
 
 endfunction
 
 function! autosettags#ASTSetTags()
 
+  let l:dir = expand('%:p:h')
+
+  if 1 == s:is_remote(l:dir)
+    return
+  endif
+
   let s:find_mkfile = 0
-  let l:tagsfile_path = s:search_tagsfile(expand('%:p:h'))
+  let l:tagsfile_path = s:search_tagsfile(l:dir)
   if '' == l:tagsfile_path
     if 0 == s:find_mkfile
       call s:confirm('note: not found ['.g:ast_tagsfile.'] & ['.g:ast_mkfile.']')
@@ -181,8 +219,14 @@ endfunction
 
 function! autosettags#ASTMakeTags()
 
+  let l:dir = expand('%:p:h')
+
+  if 1 == s:is_remote(l:dir)
+    return
+  endif
+
   let s:find_mkfile = 0
-  let l:mkfile_path = s:search_mkfile(expand('%:p:h'))
+  let l:mkfile_path = s:search_mkfile(l:dir)
   if '' == l:mkfile_path
     if 0 == s:find_mkfile
       call confirm('note: not found ['.g:ast_mkfile.']')
@@ -232,4 +276,19 @@ endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
+
+function! s:is_remote(path)
+  let l:pt = '\v(ftp:\/\/.*|rcp:\/\/.*|ssh:\/\/.*|scp:\/\/.*|http:\/\/.*|file:\/\/.*|https:\/\/.*|dav:\/\/.*|davs:\/\/.*|rsync:\/\/.*|sftp:\/\/.*)'
+  let l:match = matchstr(a:path, l:pt)
+  if '' != l:match
+    if 1 == s:debug
+      let outputfile = "~/autosettags_is_remote.log"
+      execute ":redir! >> " . outputfile
+          silent! echon l:match . "\n"
+      redir END
+    endif
+    return 1
+  endif
+  return 0
+endfunction
 
