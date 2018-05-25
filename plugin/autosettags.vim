@@ -53,7 +53,14 @@ let s:find_mkfile = 0
 let s:is_bufread = 0
 let s:flg_settags = 0
 
-let s:debug = 0
+" debug
+let s:script_name = expand('<sfile>:t')
+let s:debuglogfile = '~/.vim/debug-'.substitute(s:script_name, '\.vim', '', '').'.log'
+if !exists('g:ast_debug')
+  let s:debug = 0
+else
+  let s:debug = g:ast_debug
+endif
 
 augroup autosettags#AST
     autocmd!
@@ -250,7 +257,7 @@ function! s:exec_make(dir)
     let l:execute = '!cd '.shellescape(a:dir).'; '.shellescape(l:mkfile_path)
   endif
 
-  let l:conf = confirm('execute? ['.l:execute.']', "Yyes\nNno")
+  let l:conf = confirm('Execute? ['.l:execute.']', "Yyes\nNno")
   if 1 != l:conf
     return 2
   endif
@@ -281,14 +288,21 @@ function! s:is_remote(path)
   let l:pt = '\v(ftp:\/\/.*|rcp:\/\/.*|ssh:\/\/.*|scp:\/\/.*|http:\/\/.*|file:\/\/.*|https:\/\/.*|dav:\/\/.*|davs:\/\/.*|rsync:\/\/.*|sftp:\/\/.*)'
   let l:match = matchstr(a:path, l:pt)
   if '' != l:match
-    if 1 == s:debug
-      let outputfile = "~/autosettags_is_remote.log"
-      execute ":redir! >> " . outputfile
-          silent! echon l:match . "\n"
-      redir END
-    endif
+    call s:debuglog('is_remote l:match', l:match)
     return 1
+  else
+    call s:debuglog('is_not_remote a:path', a:path)
+    return 0
   endif
-  return 0
+endfunction
+
+function! s:debuglog(title, msg)
+  if 1 != s:debug
+    return
+  endif
+  silent execute ":redir! >> " . s:debuglogfile
+  silent! echon strftime("%Y-%m-%d %H:%M:%S")
+        \.' | '.a:title.':'.a:msg."\n"
+  redir END
 endfunction
 
