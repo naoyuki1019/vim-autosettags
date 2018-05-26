@@ -38,8 +38,6 @@ endif
 if !exists('g:ast_setmsg')
   let g:ast_setmsg = 1
 endif
-
-
 "mkfile ***.sh ***.bat
 if !exists('g:ast_mkfile')
   if 1 == s:is_win
@@ -79,13 +77,7 @@ function! autosettags#ASTOnBufRead()
 endfunction
 
 function! s:search_tagsfile(dir)
-
-  " if 1 == s:debug
-  "   let outputfile = "~/autosettags_search_tagsfile.log"
-  "   execute ":redir! >> " . outputfile
-  "       silent! echon a:dir . "\n"
-  "   redir END
-  " endif
+  call s:debuglog('search_tagsfile dir', a:dir)
 
   let l:dir = a:dir
 
