@@ -114,6 +114,11 @@ function! s:search_tagsfile(dir)
 
   let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
 
+  " Network file
+  if l:dir == a:dir
+    return ''
+  endif
+
   " 念のため
   if 1 == s:is_win
     let l:match = matchstr(l:dir, '\V..\\..\\')
@@ -159,6 +164,11 @@ function! s:search_mkfile(dir)
   endif
 
   let l:dir = fnamemodify(l:dir.s:ds.'..'.s:ds, ':p:h')
+
+  " Network file
+  if l:dir == a:dir
+    return ''
+  endif
 
   " 念のため
   if 1 == s:is_win
