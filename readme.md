@@ -2,25 +2,39 @@
 
 When opening a file, autosettags plugins look for a file named .tags(g:ast_tagsfile) & .tags(g:ast_mkfile) in the directory of the opened file and in every parent directory.
 
+** search & set tags=/dir/.tags **
 ```
 /dir/subdir/.tags
-/dev/.tags
+/dir/.tags
 /.tags
 ```
 
 ## How to use
 
-- manual set tags
+#### manual set tags
 
-	:AST
+```
+:call autosettags#ASTSetTags()
+```
 
-- make tags file
+#### make tags file
 
-	:ASTMakeTags
+```
+:call autosettags#ASTMakeTags()
+```
 
 ## Setting
 
-### ~/.vimrc
+### add (~/.vimrc)
+
+#### example (command)
+
+```vim
+command! AST call autosettags#ASTSetTags()
+command! ASTMakeTags call autosettags#ASTMakeTags()
+```
+
+#### example (default)
 
 ```vim
 let g:ast_autoset = 1 "default

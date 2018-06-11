@@ -2,7 +2,7 @@ scriptencoding utf-8
 "/**
 " * @file autosettags.vim
 " * @author naoyuki onishi <naoyuki1019 at gmail.com>
-" * @version 1.0
+" * @version 1.0.1
 " */
 
 if exists("g:loaded_autosettags")
@@ -64,9 +64,6 @@ augroup autosettags#AST
     autocmd!
     autocmd BufReadPost * call autosettags#ASTOnBufRead()
 augroup END
-
-command! AST call autosettags#ASTSetTags()
-command! ASTMakeTags call autosettags#ASTMakeTags()
 
 function! autosettags#ASTOnBufRead()
   if 1 == g:ast_autoset && (0 == g:ast_autoset_onetime || (1 == g:ast_autoset_onetime && 0 == s:flg_settags))
