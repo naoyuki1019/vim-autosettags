@@ -2,7 +2,7 @@ scriptencoding utf-8
 "/**
 " * @file autosettags.vim
 " * @author naoyuki onishi <naoyuki1019 at gmail.com>
-" * @version 1.0.1
+" * @version 1.0.2
 " */
 
 if exists("g:loaded_autosettags")
@@ -22,12 +22,9 @@ else
   let s:ds = '/'
 endif
 
-if !exists('g:ast_autoset')
-  let g:ast_autoset = 1
-endif
-if !exists('g:ast_autoset_onetime')
-  let g:ast_autoset_onetime = 1
-endif
+let g:ast_autoset = get(g:, 'ast_autoset', 1)
+let g:ast_autoset_onetime = get(g:, 'ast_autoset_onetime', 1)
+
 if !exists('g:ast_tagsfile')
   let g:ast_tagsfile = '.tags'
 endif
@@ -47,6 +44,10 @@ if !exists('g:ast_mkfile')
   endif
 endif
 
+let g:ast_ask_one = get(g:, 'ast_ask_one', 1)
+" Flag when asked if you want to Execute
+let s:ast_ask_one_flg = 0
+
 let s:find_mkfile = 0
 let s:is_bufread = 0
 let s:flg_settags = 0
@@ -65,11 +66,16 @@ augroup autosettags#AST
     autocmd BufReadPost * call autosettags#ASTOnBufRead()
 augroup END
 
+command! AST call autosettags#ASTSetTags()
+command! ASTMakeTags call autosettags#ASTMakeTags()
+
 function! autosettags#ASTOnBufRead()
   if 1 == g:ast_autoset && (0 == g:ast_autoset_onetime || (1 == g:ast_autoset_onetime && 0 == s:flg_settags))
-    let s:is_bufread = 1
-    call autosettags#ASTSetTags()
-    let s:is_bufread = 0
+    if 0 == g:ast_ask_one || (1 == g:ast_ask_one && 0 == s:ast_ask_one_flg)
+      let s:is_bufread = 1
+      call autosettags#ASTSetTags()
+      let s:is_bufread = 0
+    endif
   endif
 endfunction
 
@@ -257,6 +263,7 @@ function! s:exec_make(dir)
   endif
 
   let l:conf = confirm('Execute? ['.l:execute.']', "Yyes\nNno")
+  let s:ast_ask_one_flg = 1
   if 1 != l:conf
     return 2
   endif
@@ -274,6 +281,7 @@ function! s:exec_make(dir)
 
 endfunction
 
+"Do not display confirmation message when called by bufread
 function! s:confirm(msg)
   if 1 != s:is_bufread
     call confirm(a:msg)
